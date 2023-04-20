@@ -43,15 +43,19 @@ class InputBox:
         Screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         pg.draw.rect(Screen, self.color, self.rect, 2)
+    
+    def output(self):
+        return self.data
 
-class InputBoxForNum:
+class InputBoxForAge:
 
-    def __init__(self, x, y, w, h, num = ''):
+    def __init__(self, x, y, w, h, text=''):
         self.rect = pg.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
-        self.num = num
-        self.txt_surface = FONT.render(num, True, self.color)
+        self.text = text
+        self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
+        self.error = False
 
     def handle_event(self, event):
         
@@ -66,18 +70,16 @@ class InputBoxForNum:
         if event.type == pg.KEYDOWN:
             if self.active:
                 if event.key == pg.K_RETURN:
-                    # for i in self.num:
-                        # if i not in '0123456789':
-                            
-                        # else:
-                    self.dataage = self.num
-                    self.nun = ''
+                    self.data = self.text
+                    self.text = ''
+                    if not self.data.isnumeric():
+                        self.error = True 
                 elif event.key == pg.K_BACKSPACE:
-                    self.num = self.num[:-1]
+                    self.text = self.text[:-1]
                 else:
-                    self.num += event.unicode
+                    self.text += event.unicode
                 # Re-render the text.
-                self.txt_surface = FONT.render(self.num, True, self.color)
+                self.txt_surface = FONT.render(self.text, True, self.color)
 
     def update(self):
         # Resize the box if the text is too long.
@@ -89,7 +91,15 @@ class InputBoxForNum:
         Screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         pg.draw.rect(Screen, self.color, self.rect, 2)
-
+        if self.error == True:
+            error = font.render('Enter number only!',True, (0,0,0), (255,255,255))
+            errorRect = error.get_rect() # text size
+            errorRect.center = (530, 320)
+            screen.blit(error, errorRect)
+    
+    def output(self):
+        return self.data
+    
 class Rectangle:
     def __init__(self,x=0,y=0,w=0,h=0):
         self.x = x # Position X
@@ -108,8 +118,7 @@ class Rectangle:
 
 class Button(Rectangle):
     def __init__(self, x=0, y=0, w=0, h=0):
-        Rectangle.__init__(self, x, y, w, h)
-        
+        Rectangle.__init__(self, x, y, w, h)   
     def isMouseOn(self):
         if(pg.mouse.get_pos()[0] >= self.x and pg.mouse.get_pos()[0] <= self.x+self.w and pg.mouse.get_pos()[1] >= self.y and pg.mouse.get_pos()[1] <= self.y+self.h):
             return True
@@ -146,9 +155,9 @@ COLOR_ACTIVE = pg.Color('dodgerblue2')     # ^^^
 FONT = pg.font.Font(None, 32)
 input_box1 = InputBox(20, 120, 140, 32) # สร้าง InputBox1
 input_box2 = InputBox(20, 240, 140, 32) # สร้าง InputBox2
-input_box3 = InputBoxForNum(20, 360, 140, 32)
+input_box3 = InputBoxForAge(20, 360, 140, 32)
 input_boxes = [input_box1, input_box2, input_box3] # เก็บ InputBox ไว้ใน list เพื่อที่จะสามารถนำไปเรียกใช้ได้ง่าย
-
+status = 0
 run = True
 
 while run:
@@ -156,9 +165,17 @@ while run:
     screen.blit(text, textRect)
     screen.blit(text2, text2Rect)
     screen.blit(text3, text3Rect)
-
+    
+    if status == 1:
+        data = font.render('Hello ' + input_box1.output()+ ' ' + input_box2.output() + '! You are ' + input_box3.output() + ' years old.', True, (0,0,0), (255,255,255))
+        dataRect = data.get_rect() # text size
+        dataRect.center = (400, 430)
+        screen.blit(data, dataRect)
     if summit.isMousePressed() and summit.isMouseOn():
-        summit.changColor(138,43,226)
+        summit.changColor(0,0,0)
+        status = 1
+    else:
+        summit.changColor(0,150,255)
     
     for box in input_boxes: # ทำการเรียก InputBox ทุกๆตัว โดยการ Loop เข้าไปยัง list ที่เราเก็บค่า InputBox ไว้
         box.update() # เรียกใช้ฟังก์ชัน update() ของ InputBox
